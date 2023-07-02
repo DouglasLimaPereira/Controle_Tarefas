@@ -21,14 +21,9 @@ class TarefaController extends Controller
      */
     public function index()
     {
-        dd(Tarefa::all());
-        if (auth()->check()) {
-            $id = auth()->user()->id;
-            $nome = auth()->user()->name;
-            $email = auth()->user()->email;
-
-            return "ID: $id | Usuário: $nome | E-mail: $email";
-        }
+        $user_id = auth()->user()->id;
+        $tarefas = Tarefa::where('user_id', $user_id)->paginate(1);
+        return view('tarefa.index', compact('tarefas'));
     }
 
     /**
@@ -59,7 +54,10 @@ class TarefaController extends Controller
 
         DB::beginTransaction();
         try {
-            $tarefa = Tarefa::create($request->all());
+            $dados = $request->all();
+            $dados['user_id'] = auth()->user()->id;
+
+            $tarefa = Tarefa::create($dados);
             DB::commit();
 
             try {
