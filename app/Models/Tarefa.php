@@ -14,4 +14,9 @@ class Tarefa extends Model
         'data_conclusao',
         'descricao',
     ];
+
+    public function usuario()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

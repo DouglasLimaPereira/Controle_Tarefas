@@ -5,7 +5,12 @@
     <div class="row">
         <div class="col-md-12">
             <div class="card">
-                <div class="card-header">{{ __('Adicionar Tarefa') }}</div>
+                <div class="card-header">
+                    {{ __('Adicionar Tarefa') }}
+                    
+                    <a href="{{ route('tarefa.create') }}" class="btn btn-primary float-end ms-1">Nova Tarefa</a>
+                    <a href="{{ route('tarefa.export') }}" class="btn btn-warning float-end">Exportar Excel</a>
+                </div>
                 
                 <div class="card-body">
                     <table class="table table-striped table-hover table-bordered table-responsive">
@@ -29,9 +34,14 @@
                                                 <i class="fa-duotone fa-list"></i>
                                             </button>
                                             <ul class="dropdown-menu">
-                                              <li><a class="dropdown-item" href="#">Action</a></li>
-                                              <li><a class="dropdown-item" href="#">Another action</a></li>
-                                              <li><a class="dropdown-item" href="#">Something else here</a></li>
+                                                <li><a class="dropdown-item" href="{{ route('tarefa.show', $tarefa->id) }}">Visualizar</a></li>
+                                                <li><a class="dropdown-item" href="{{ route('tarefa.edit', $tarefa->id) }}">Editar</a></li>
+                                                <li style="cursor: pointer">
+                                                    <form id="form_{{$tarefa->id}}" action="{{ route('tarefa.destroy', $tarefa->id) }}" method="POST">
+                                                        @csrf @method('DELETE')
+                                                    </form>
+                                                    <a class="dropdown-item text-danger" onclick="remover({{$tarefa->id}})">Deletar</a>
+                                                </li>
                                             </ul>
                                         </div>
                                     </td>
@@ -46,14 +56,14 @@
                         </tbody>
                     </table>
                     <nav class="mb-0">
-                        <ul class="pagination justify-content-end">
-                          <li class="page-item"><a class="page-link" href="{{$tarefas->previousPageUrl()}}">Voltar</a></li>
+                        <ul class="pagination justify-content-end ">
+                          <li class="page-item"><a class="page-link text-secondary" href="{{$tarefas->previousPageUrl()}}">Voltar</a></li>
                           @for ($i = 1; $i <= $tarefas->lastPage() ; $i++)
-                            <li class="page-item">
+                            <li class="page-item link-secondary {{($tarefas->currentPage() == $i) ? 'active' : ''}}">
                                 <a class="page-link" href="{{$tarefas->Url($i)}}">{{$i}}</a>
                             </li>
                           @endfor
-                          <li class="page-item"><a class="page-link" href="{{$tarefas->nextPageUrl()}}">Avançar</a></li>
+                          <li class="page-item"><a class="page-link text-secondary" href="{{$tarefas->nextPageUrl()}}">Avançar</a></li>
                         </ul>
                     </nav>
                 </div>
@@ -61,4 +71,16 @@
         </div>
     </div>
 </div>
+
+<script>
+    function remover(tarefa){
+        $confirmacao = confirm('Tem certeza que deseja remover esta tarefa?');
+
+        if($confirmacao){
+            let form = document.getElementById("form_"+tarefa+"");
+            form.submit();
+        }
+    }
+</script>
+
 @endsection

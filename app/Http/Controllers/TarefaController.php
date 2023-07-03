@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Exports\TarefasExport;
 use App\Mail\NovaTarefaMail;
 use App\Models\Tarefa;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
+use Maatwebsite\Excel\Facades\Excel;
 
 class TarefaController extends Controller
 {
@@ -22,7 +24,7 @@ class TarefaController extends Controller
     public function index()
     {
         $user_id = auth()->user()->id;
-        $tarefas = Tarefa::where('user_id', $user_id)->paginate(1);
+        $tarefas = Tarefa::where('user_id', $user_id)->paginate(10);
         return view('tarefa.index', compact('tarefas'));
     }
 
@@ -89,7 +91,12 @@ class TarefaController extends Controller
      */
     public function edit(Tarefa $tarefa)
     {
-        //
+        $user_id = auth()->user()->id;
+        if (!$tarefa->user_id == $user_id) {
+            return view('acesso-negado');
+        }
+
+        return view('tarefa.edit', compact('tarefa'));
     }
 
     /**
@@ -97,7 +104,45 @@ class TarefaController extends Controller
      */
     public function update(Request $request, Tarefa $tarefa)
     {
-        //
+        $user_id = auth()->user()->id;
+        if (!$tarefa->user_id == $user_id) {
+            return view('acesso-negado');
+        }
+
+        $request->validate(
+            [
+                'tarefa' => 'required|min:3',
+                'data_conclusao' => 'required',
+                'descricao' => 'nullable'
+            ],
+            [
+                'tarefa.required' => 'O campo tarefa precisa ser preenchido',
+                'tarefa.min' => 'O campo tarefa precisa de no minimo 3 digitos',
+                'data_conclusao.required' => 'O campo Data Limite de Conclusão precisa ser preenchido',
+            ]
+        );
+
+        DB::beginTransaction();
+        try {
+            $dados = $request->all();
+            $dados['user_id'] = auth()->user()->id;
+
+            $tarefa->update($dados);
+            DB::commit();
+
+            // try {
+            //     $url = "http://controle_tarefas.test/tarefa/".$tarefa->id;
+            //     $nome = auth()->user()->name;
+            //     Mail::to(auth()->user()->email)->send(new NovaTarefaMail($tarefa, $url, $nome));
+            // } catch (\Throwable $th) {
+            //     dd($th->getMessage());
+            // }
+            
+            return redirect()->route('tarefa.show', $tarefa->id);
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return redirect()->back();
+        }
     }
 
     /**
@@ -105,6 +150,25 @@ class TarefaController extends Controller
      */
     public function destroy(Tarefa $tarefa)
     {
-        //
+        $user_id = auth()->user()->id;
+        if (!$tarefa->user_id == $user_id) {
+            return view('acesso-negado');
+        }
+
+        DB::beginTransaction();
+        try {
+            $tarefa->delete();
+            DB::commit();
+            return redirect()->route('tarefa.index');
+        } catch (\Throwable $th) {
+            DB::rollBack();
+            return redirect()->back();
+        }
+    }
+
+    public function exportar()
+    {
+        $user_nome = auth()->user()->name;
+        return Excel::download(new TarefasExport, 'lista_de_tarefas('.$user_nome.').xlsx');
     }
 }
