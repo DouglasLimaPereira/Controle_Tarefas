@@ -9,7 +9,8 @@
                     {{ __('Adicionar Tarefa') }}
                     
                     <a href="{{ route('tarefa.create') }}" class="btn btn-primary float-end ms-1">Nova Tarefa</a>
-                    <a href="{{ route('tarefa.export') }}" class="btn btn-warning float-end">Exportar Excel</a>
+                    <a href="{{ route('tarefa.export', ['extensao' => 'xlsx']) }}" class="btn btn-warning float-end">Exportar Excel(XLSX)</a>
+                    <a href="{{ route('tarefa.export', ['extensao' => 'csv']) }}" class="btn btn-warning float-end">Exportar Excel(CSV)</a>
                 </div>
                 
                 <div class="card-body">
