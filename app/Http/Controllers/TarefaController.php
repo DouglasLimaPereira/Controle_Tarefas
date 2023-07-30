@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Maatwebsite\Excel\Facades\Excel;
+use PDF;
 
 class TarefaController extends Controller
 {
@@ -168,11 +169,26 @@ class TarefaController extends Controller
 
     public function exportar($extensao)
     {
-        if ($extensao != 'xlsx' && $extensao != 'csv') {
-            return redirect()->route('tarefa.index');
+        // return Excel::download(new InvoicesExport, 'invoices.pdf', \Maatwebsite\Excel\Excel::MPDF);
+        if (in_array($extensao, ['xlsx', 'csv', 'pdf'])) {
+            $user_nome = auth()->user()->name;
+            return Excel::download(new TarefasExport, 'lista_de_tarefas('.$user_nome.').'.$extensao);
         }
         
-        $user_nome = auth()->user()->name;
-        return Excel::download(new TarefasExport, 'lista_de_tarefas('.$user_nome.').'.$extensao);
+        return redirect()->route('tarefa.index');
+    }
+
+    public function pdf()
+    {
+        // dd('DOM PDF');
+        $tarefas = Tarefa::where('user_id', auth()->user()->id)->get();
+        // dd($tarefas);
+        return PDF::loadView('tarefa.tarefa-pdf',compact('tarefas'))
+            // Se quiser que fique no formato a4 retrato: ->setPaper('a4', 'landscape')
+            ->setPaper('a4', 'portrait')
+            // ->download('tarefas-'.auth()->user()->name.'.pdf');
+            ->stream('tarefas-'.auth()->user()->name.'.pdf');
+            
     }
 }
+
